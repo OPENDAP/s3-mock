@@ -29,12 +29,6 @@ class ErrorServer(BaseHTTPRequestHandler):
     """
     requests = {}
 
-    def get_server(self):
-        return self.server
-
-    def set_server(self, server):
-        self.server = server
-
     def process_request(self, path):
         """
         Process a request. Send a response or an error (422) if the request was malformed.
@@ -81,6 +75,7 @@ class ErrorServer(BaseHTTPRequestHandler):
         throw an exception causing the server to stop.
         :return: Does not return a value.
         """
+        response_items = self.process_request(self.path)
         if self.path.startswith("/exit"):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
@@ -93,9 +88,7 @@ class ErrorServer(BaseHTTPRequestHandler):
             self.wfile.write(bytes("</body></html>", "utf-8"))
             t = Thread(target=lambda server: server.shutdown(), args=(webServer,))
             t.run()
-
-        response_items = self.process_request(self.path)
-        if response_items[0] == 200:
+        elif response_items[0] == 200:
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
