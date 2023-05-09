@@ -1,25 +1,18 @@
 
-# This server/service will return various kinds of responses based on the
-# input path. The intent is to mimic the S3 behavior of returning 500 responses
-# in a pseudo-random way. This server, however, is completely predictable.
-# It can return a series of 500 responses, for example, and then a 200.
-#
-# jhrg 5/8/23
+"""
+This server/service will return various kinds of responses based on the
+input path. The intent is to mimic the S3 behavior of returning 500 responses
+in a pseudo-random way. This server, however, is completely predictable.
+It can return a series of 500 responses, for example, and then a 200.
+
+jhrg 5/8/23
+"""
+
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
 hostName = "localhost"
 serverPort = 8080
-
-
-class ServerExit(Exception):
-    """ Exception to indicate that the server should exit """
-
-    def __init__(self, message="No error message given"):
-        self.message = message
-
-    def __str__(self):
-        return f'Server Exception: {self.message}'
 
 
 class ErrorServer(BaseHTTPRequestHandler):
@@ -82,7 +75,6 @@ class ErrorServer(BaseHTTPRequestHandler):
                 self.requests.pop(text_path)
                 return [200, text_path]
 
-
     def do_GET(self):
         """
         Process the request. If the request starts with the word 'exit' then this method will
@@ -99,7 +91,7 @@ class ErrorServer(BaseHTTPRequestHandler):
             self.wfile.write(bytes(f"<p>The HTTP response service <i>has left the building</i>; invoked with {self.path}.</p>",
                                    "utf-8"))
             self.wfile.write(bytes("</body></html>", "utf-8"))
-            t = Thread(target=lambda server: server.shutdown(), args=(self.get_server(),))
+            t = Thread(target=lambda server: server.shutdown(), args=(webServer,))
             t.run()
 
         response_items = self.process_request(self.path)
@@ -119,7 +111,6 @@ class ErrorServer(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     webServer = ThreadingHTTPServer((hostName, serverPort), ErrorServer)
-    #ErrorServer.set_server(webServer)
     print(f"Server started http://{hostName}:{serverPort}")
 
     try:
