@@ -6,6 +6,7 @@
 #
 # jhrg 5/8/23
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
 
 hostName = "localhost"
 serverPort = 8080
@@ -21,7 +22,7 @@ class ServerExit(Exception):
         return f'Server Exception: {self.message}'
 
 
-class MyServer(BaseHTTPRequestHandler):
+class ErrorServer(BaseHTTPRequestHandler):
     """
     Process requests where path is of the form /<code>/<N>/<text-path>.
     For that path, the service will return <code> for <N> consecutive
@@ -34,6 +35,12 @@ class MyServer(BaseHTTPRequestHandler):
     Structure: {<text_path>: [code, times so far]}
     """
     requests = {}
+
+    def get_server(self):
+        return self.server
+
+    def set_server(self, server):
+        self.server = server
 
     def process_request(self, path):
         """
@@ -82,8 +89,18 @@ class MyServer(BaseHTTPRequestHandler):
         throw an exception causing the server to stop.
         :return: Does not return a value.
         """
-        if self.path == "/exit":
-            raise KeyboardInterrupt
+        if self.path.startswith("/exit"):
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(bytes("<html><head><title>HTTP Test Service exiting</title></head>", "utf-8"))
+            self.wfile.write(bytes(f"<p>Request: {self.path}</p>", "utf-8"))
+            self.wfile.write(bytes("<body>", "utf-8"))
+            self.wfile.write(bytes(f"<p>The HTTP response service <i>has left the building</i>; invoked with {self.path}.</p>",
+                                   "utf-8"))
+            self.wfile.write(bytes("</body></html>", "utf-8"))
+            t = Thread(target=lambda server: server.shutdown(), args=(self.get_server(),))
+            t.run()
 
         response_items = self.process_request(self.path)
         if response_items[0] == 200:
@@ -101,15 +118,14 @@ class MyServer(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    webServer = ThreadingHTTPServer((hostName, serverPort), MyServer)
+    webServer = ThreadingHTTPServer((hostName, serverPort), ErrorServer)
+    #ErrorServer.set_server(webServer)
     print(f"Server started http://{hostName}:{serverPort}")
 
     try:
         webServer.serve_forever()
     except KeyboardInterrupt:
         pass
-    except ServerExit:
-        print("Server exit")
 
     webServer.server_close()
     print("Server stopped.")
