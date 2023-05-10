@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
 hostName = "localhost"
-serverPort = 8080
+serverPort = 8000
 
 
 class ErrorServer(BaseHTTPRequestHandler):
@@ -85,7 +85,7 @@ class ErrorServer(BaseHTTPRequestHandler):
             self.wfile.write(bytes("<body>", "utf-8"))
             self.wfile.write(bytes(f"<p>The HTTP response service <i>has left the building</i>; invoked with {self.path}.</p>",
                                    "utf-8"))
-            self.wfile.write(bytes("</body></html>", "utf-8"))
+            self.wfile.write(bytes("</body></html>\n", "utf-8"))
             t = Thread(target=lambda server: server.shutdown(), args=(webServer,))
             t.run()
         elif response_items[0] == 200:
@@ -97,7 +97,7 @@ class ErrorServer(BaseHTTPRequestHandler):
             self.wfile.write(bytes("<body>", "utf-8"))
             self.wfile.write(bytes(f"<p>This 200 response is from the test HTTP service invoked with {self.path}.</p>",
                                    "utf-8"))
-            self.wfile.write(bytes("</body></html>", "utf-8"))
+            self.wfile.write(bytes("</body></html>\n", "utf-8"))
         else:
             self.send_error(response_items[0], None, response_items[1])
 
